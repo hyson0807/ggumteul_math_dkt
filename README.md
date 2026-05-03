@@ -63,11 +63,46 @@ curl -X POST http://localhost:8000/predict \
 
 ## 배포 (Railway)
 
-1. GitHub 에 push 후 Railway 에서 새 프로젝트 → 이 디렉토리 연결
-2. Railway 가 `Procfile` 의 명령으로 자동 시작
-3. 배포 후 `/health` 로 모델 로드 확인 → `ggumteul_math_server` 의 `DKT_BASE_URL` 환경변수 갱신
+### 1. GitHub repo 생성 + 푸시
+GitHub 에서 새 repo 만들기 (private 권장) → 로컬에서:
+```bash
+cd ggumteul_math_dkt
+git remote add origin git@github.com:<유저명>/ggumteul_math_dkt.git
+git push -u origin main
+```
 
-`model.pb` (265KB), `knowledgeTag_skillID.txt` (19KB) 는 git 에 포함되어 별도 업로드 불필요.
+### 2. Railway 프로젝트 연결
+1. [Railway 대시보드](https://railway.app/) → **New Project** → **Deploy from GitHub repo**
+2. 위에서 만든 repo 선택 (Railway 가 GitHub 권한 요청하면 허용)
+3. Railway 가 `Procfile` 자동 인식 → `uvicorn main:app --host 0.0.0.0 --port $PORT` 로 시작
+4. 빌드 완료 후 **Settings → Networking → Generate Domain** 으로 public URL 발급
+   - 예: `https://ggumteul-math-dkt-production.up.railway.app`
+
+> 환경변수 추가 불필요 — `MODEL_PATH`, `MAPPING_PATH` 는 코드 기본값으로 동작. `PORT` 는 Railway 가 자동 주입.
+
+### 3. 배포 검증
+```bash
+curl https://<railway-dkt-url>/health
+# → {"model_loaded": true, "mapping_entries": 1865}
+
+curl -X POST https://<railway-dkt-url>/predict \
+  -H "Content-Type: application/json" \
+  -d '{"student_id":"test","knowledge_tags":[5485],"corrects":[1]}'
+```
+
+### 4. NestJS 측 환경변수 갱신
+기존 NestJS Railway 프로젝트 → **Variables** 에 추가:
+```
+DKT_BASE_URL = https://<railway-dkt-url>
+DKT_TIMEOUT_MS = 10000
+```
+저장 후 자동 redeploy.
+
+> `model.pb` (7MB), `knowledgeTag_skillID.txt` (19KB) 는 git 에 포함되어 있으므로 별도 업로드 불필요. Railway 가 GitHub 에서 그대로 가져온다.
+
+### 운영 메모
+- **Cold start**: TF frozen graph 첫 로드 시 5\~15초 소요. Railway 가 무료 플랜에서 idle sleep 시키면 첫 호출 응답이 느릴 수 있음.
+- **로그 확인**: Railway 대시보드 → 해당 서비스 → Deployments → 최신 빌드 → View Logs.
 
 ## 모델·매핑 갱신
 
