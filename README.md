@@ -4,11 +4,34 @@
 
 전체 시스템 동작 원리는 [`docs/dkt-integration.md`](../docs/dkt-integration.md) 참고.
 
+## 프로젝트 구조
+
+```
+ggumteul_math_dkt/
+├── app/
+│   ├── main.py          # FastAPI 부트스트랩 + lifespan
+│   ├── config.py        # 환경변수 + 차원 상수
+│   ├── schemas.py       # Pydantic 요청/응답
+│   ├── model/           # 모델·매핑·인코딩 (인프라)
+│   │   ├── inference.py
+│   │   ├── mapping.py
+│   │   └── encoding.py
+│   └── api/             # 라우터
+│       ├── health.py
+│       └── predict.py
+├── data/
+│   ├── model.pb                  # frozen graph
+│   └── knowledgeTag_skillID.txt  # 1865 entries
+├── Procfile             # uvicorn app.main:app
+├── requirements.txt
+└── .python-version      # 3.11
+```
+
 ## 사전 준비
 
 - Python 3.10\~3.11 권장 (TensorFlow 2.13\~2.15 호환). Python 3.12+ 는 TF 2.13\~2.15 wheel 이 없어 빌드 실패
 - `.python-version` 파일이 `3.11` 로 고정 — Railway/mise/pyenv 가 자동 인식
-- `model.pb`, `knowledgeTag_skillID.txt` 가 프로젝트 루트에 있는지 확인
+- `data/model.pb`, `data/knowledgeTag_skillID.txt` 가 존재하는지 확인
 
 ## 로컬 실행
 
@@ -16,7 +39,7 @@
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 부팅 로그에 다음 두 줄이 보이면 정상:
@@ -99,7 +122,7 @@ DKT_TIMEOUT_MS = 10000
 ```
 저장 후 자동 redeploy.
 
-> `model.pb` (7MB), `knowledgeTag_skillID.txt` (19KB) 는 git 에 포함되어 있으므로 별도 업로드 불필요. Railway 가 GitHub 에서 그대로 가져온다.
+> `data/model.pb` (7MB), `data/knowledgeTag_skillID.txt` (19KB) 는 git 에 포함되어 있으므로 별도 업로드 불필요. Railway 가 GitHub 에서 그대로 가져온다.
 
 ### 운영 메모
 - **Cold start**: TF frozen graph 첫 로드 시 5\~15초 소요. Railway 가 무료 플랜에서 idle sleep 시키면 첫 호출 응답이 느릴 수 있음.
@@ -107,6 +130,6 @@ DKT_TIMEOUT_MS = 10000
 
 ## 모델·매핑 갱신
 
-- `model.pb`: 팀원이 재학습한 frozen graph 로 교체
-- `knowledgeTag_skillID.txt`: 매핑 변경 시 교체. 형식 `knowledgeTag<TAB>skillID`
+- `data/model.pb`: 팀원이 재학습한 frozen graph 로 교체
+- `data/knowledgeTag_skillID.txt`: 매핑 변경 시 교체. 형식 `knowledgeTag<TAB>skillID`
 - 둘 다 갱신 후 서버 재시작 필요
