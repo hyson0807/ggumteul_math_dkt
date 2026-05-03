@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 
@@ -12,9 +11,6 @@ class TagSkillMapping:
         self._skill_to_tag: dict[int, int] = {}
 
     def load(self, path: str) -> None:
-        if not os.path.exists(path):
-            raise RuntimeError(f"매핑 파일을 찾을 수 없습니다: {path}")
-
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 parts = line.strip().split("\t")

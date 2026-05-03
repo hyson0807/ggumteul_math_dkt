@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 import numpy as np
@@ -20,9 +19,6 @@ class DktModel:
         self._preds_tensor = None
 
     def load(self, path: str) -> None:
-        if not os.path.exists(path):
-            raise RuntimeError(f"모델 파일을 찾을 수 없습니다: {path}")
-
         with tf.io.gfile.GFile(path, "rb") as f:
             graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
