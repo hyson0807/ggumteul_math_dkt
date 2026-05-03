@@ -65,18 +65,19 @@ def predict(req: PredictRequest) -> PredictResponse:
         candidate = np.array(candidate_indices)
         sub_probs = final_prob[candidate]
         order = np.argsort(sub_probs)
-        k = min(5, len(candidate))
+        k = min(req.top_k, len(candidate))
         top_indices = candidate[order[-k:][::-1]]
         bottom_indices = candidate[order[:k]]
     else:
-        top_indices = np.argsort(final_prob)[-5:][::-1]
-        bottom_indices = np.argsort(final_prob)[:5]
+        k = min(req.top_k, NUM_PROBLEMS)
+        top_indices = np.argsort(final_prob)[-k:][::-1]
+        bottom_indices = np.argsort(final_prob)[:k]
 
     return PredictResponse(
         student_id=req.student_id,
         diagnosis=Diagnosis(
-            top_5_strong=_to_entries(top_indices, final_prob),
-            bottom_5_weak=_to_entries(bottom_indices, final_prob),
+            top_strong=_to_entries(top_indices, final_prob),
+            bottom_weak=_to_entries(bottom_indices, final_prob),
         ),
     )
 
