@@ -6,7 +6,8 @@
 
 ## 사전 준비
 
-- Python 3.10\~3.11 권장 (TensorFlow 2.13\~2.15 호환)
+- Python 3.10\~3.11 권장 (TensorFlow 2.13\~2.15 호환). Python 3.12+ 는 TF 2.13\~2.15 wheel 이 없어 빌드 실패
+- `.python-version` 파일이 `3.11` 로 고정 — Railway/mise/pyenv 가 자동 인식
 - `model.pb`, `knowledgeTag_skillID.txt` 가 프로젝트 루트에 있는지 확인
 
 ## 로컬 실행
