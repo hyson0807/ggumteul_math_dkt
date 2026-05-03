@@ -2,7 +2,7 @@
 
 학생의 풀이 시퀀스를 받아 강·약점 개념을 진단하는 FastAPI 서버. 사전 학습된 DKT (Deep Knowledge Tracing) 모델을 추론에 사용한다.
 
-전체 시스템 동작 원리는 [`docs/dkt-integration.md`](../docs/dkt-integration.md) 참고.
+전체 시스템 동작 원리는 [`docs/dkt-integration.md`](../docs/dkt-integration.md) 참고
 
 ## 프로젝트 구조
 
