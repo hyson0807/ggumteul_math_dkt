@@ -16,6 +16,9 @@ class PredictRequest(BaseModel):
     restrict_to_tags: Optional[List[int]] = None
     # 강·약점 각각 몇 개씩 반환할지. 기본 5, 후보 수보다 크면 후보 수만큼만.
     top_k: int = Field(default=5, gt=0, le=20)
+    # True 이면 restrict_to_tags 범위의 모든 tag별 P_DKT 를 응답에 포함.
+    # 추천 알고리즘이 ConceptPriority 계산을 위해 전체 확률을 필요로 함.
+    include_all_probabilities: bool = False
 
 
 class SkillEntry(BaseModel):
@@ -24,9 +27,15 @@ class SkillEntry(BaseModel):
     probability: float
 
 
+class ProbabilityEntry(BaseModel):
+    knowledge_tag: int
+    probability: float
+
+
 class Diagnosis(BaseModel):
     top_strong: List[SkillEntry]
     bottom_weak: List[SkillEntry]
+    all_probabilities: Optional[List[ProbabilityEntry]] = None
 
 
 class PredictResponse(BaseModel):

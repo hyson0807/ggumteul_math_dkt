@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 from fastapi import APIRouter, HTTPException
 
@@ -13,6 +15,7 @@ from app.schemas import (
     Diagnosis,
     PredictRequest,
     PredictResponse,
+    ProbabilityEntry,
     SkillEntry,
 )
 
@@ -46,6 +49,8 @@ def predict(req: PredictRequest) -> PredictResponse:
     x = encode_sequence(skill_ids, corrects)
     final_prob = model.predict_last(x)
 
+    all_probabilities: Optional[list[ProbabilityEntry]] = None
+
     if req.restrict_to_tags:
         candidate_indices: list[int] = []
         for tag in req.restrict_to_tags:
@@ -68,6 +73,15 @@ def predict(req: PredictRequest) -> PredictResponse:
         k = min(req.top_k, len(candidate))
         top_indices = candidate[order[-k:][::-1]]
         bottom_indices = candidate[order[:k]]
+
+        if req.include_all_probabilities:
+            all_probabilities = [
+                ProbabilityEntry(
+                    knowledge_tag=e.knowledge_tag,
+                    probability=e.probability,
+                )
+                for e in _to_entries(candidate, final_prob)
+            ]
     else:
         k = min(req.top_k, NUM_PROBLEMS)
         top_indices = np.argsort(final_prob)[-k:][::-1]
@@ -78,6 +92,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         diagnosis=Diagnosis(
             top_strong=_to_entries(top_indices, final_prob),
             bottom_weak=_to_entries(bottom_indices, final_prob),
+            all_probabilities=all_probabilities,
         ),
     )
 
